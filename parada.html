@@ -3173,19 +3173,24 @@ footer {
                 ? 1000 + (weight - 10) * 50
                 : 1500 + (weight - 20) * 20;
         const maintenanceDay = Math.min(hollidaySegarDay, 2400);
-        const firstShock = weight * 2;
-        const secondShock = weight * 4;
+        // Teto exibido: dose adulta bifásica usual (AHA: 120-200 J conforme fabricante; monofásico 360 J).
+        // Sem o teto, adolescentes > 50 kg recebiam valores acima da dose adulta (ex.: 60 kg → 240 J).
+        const adultShock = 200;
+        const firstShock = Math.min(weight * 2, adultShock);
+        const secondShock = Math.min(weight * 4, adultShock);
+        const shockCapped = weight * 4 > adultShock;
         const neonatalMaintenanceBlocked = ageMonths === undefined;
         return [
             {
                 label: "Desfibrilação",
                 value: `${fmt(firstShock)} J → ${fmt(secondShock)} J`,
-                note: "Primeiro choque: 2 J/kg. Segundo: 4 J/kg. Subsequentes: ≥4 J/kg; máximo 10 J/kg ou dose adulta, o menor.",
+                note: "Primeiro choque: 2 J/kg. Segundo: 4 J/kg. Subsequentes: ≥4 J/kg; máximo 10 J/kg ou dose adulta, o menor."
+                    + (shockCapped ? " Valor limitado a 200 J (dose adulta bifásica usual, 120-200 J conforme o fabricante; se desconhecida, usar a energia máxima do aparelho; monofásico: 360 J)." : ""),
             },
             {
                 label: "Cardioversão sincronizada",
-                value: `${fmt(weight * 0.5)}-${fmt(weight)} J`,
-                note: `Se ineficaz: ${fmt(weight * 2)} J`,
+                value: `${fmt(Math.min(weight * 0.5, adultShock))}-${fmt(Math.min(weight, adultShock))} J`,
+                note: `Se ineficaz: ${fmt(Math.min(weight * 2, adultShock))} J`,
             },
             {
                 label: "Cristaloide",
@@ -3207,9 +3212,18 @@ footer {
         const ageYears = typeof ageMonths === "number" ? ageMonths / 12 : undefined;
         const roundToHalf = (value) => Math.round(value * 2) / 2;
         const ettByWeight = weight < 2 ? 2.5 : weight < 4 ? 3 : weight < 8 ? 3.5 : weight < 15 ? 4 : weight < 20 ? 4.5 : weight < 30 ? 5 : weight < 40 ? 5.5 : weight < 50 ? 6 : weight < 60 ? 6.5 : weight < 75 ? 7 : 7.5;
-        const ettCuffed = ageYears !== undefined && ageYears >= 1 ? roundToHalf(Math.min(8, ageYears / 4 + 3.5)) : ettByWeight;
-        const ettUncuffed = ageYears !== undefined && ageYears >= 1 ? roundToHalf(ageYears / 4 + 4) : ettCuffed + 0.5;
-        const depth = ageYears !== undefined && ageYears >= 1 ? ageYears / 2 + 12 : ettCuffed * 3;
+        // PALS: as fórmulas por idade (idade/4 + 3,5 com cuff; idade/4 + 4 sem cuff) valem a partir de 2 anos.
+        // De 1 a < 2 anos: 3,5 com cuff / 4,0 sem cuff. Lactente < 1 ano: 3,0 com cuff / 3,5 sem cuff
+        // (menores seguem a tabela por peso). Idade não informada: estimativa por peso, como antes.
+        const ettCuffed = ageYears === undefined
+            ? ettByWeight
+            : ageYears >= 2
+                ? roundToHalf(Math.min(8, ageYears / 4 + 3.5))
+                : ageYears >= 1
+                    ? 3.5
+                    : Math.min(ettByWeight, 3);
+        const ettUncuffed = ageYears !== undefined && ageYears >= 2 ? roundToHalf(ageYears / 4 + 4) : ettCuffed + 0.5;
+        const depth = ageYears !== undefined && ageYears >= 1 ? ageYears / 2 + 12 : ettByWeight * 3;
         const blade = weight < 1.5 ? "00-0 reta" : weight < 4 ? "0 reta" : weight < 10 ? "1 reta" : weight < 25 ? "2 reta/curva" : "2-3 curva";
         const suction = weight < 5 ? "6-8 Fr" : weight < 15 ? "8-10 Fr" : weight < 30 ? "10-12 Fr" : "12-14 Fr";
         const supraglottic = weight < 5 ? "nº 1" : weight < 10 ? "nº 1,5" : weight < 20 ? "nº 2" : weight < 30 ? "nº 2,5" : weight < 50 ? "nº 3" : weight < 70 ? "nº 4" : "nº 5";
