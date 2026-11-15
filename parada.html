@@ -3173,24 +3173,33 @@ footer {
                 ? 1000 + (weight - 10) * 50
                 : 1500 + (weight - 20) * 20;
         const maintenanceDay = Math.min(hollidaySegarDay, 2400);
-        // Teto exibido: dose adulta bifásica usual (AHA: 120-200 J conforme fabricante; monofásico 360 J).
-        // Sem o teto, adolescentes > 50 kg recebiam valores acima da dose adulta (ex.: 60 kg → 240 J).
-        const adultShock = 200;
-        const firstShock = Math.min(weight * 2, adultShock);
-        const secondShock = Math.min(weight * 4, adultShock);
-        const shockCapped = weight * 4 > adultShock;
+        // A dose adulta (teto do PALS) depende do aparelho (AHA): bifásico conforme o fabricante
+        // (usual 120-200 J; se desconhecida, energia máxima do aparelho); monofásico 360 J.
+        // Sem teto, adolescentes > 50 kg recebiam valores acima da dose adulta bifásica (ex.: 60 kg → 240 J).
+        // Quando o teto se aplica, os dois tipos de aparelho são exibidos lado a lado.
+        const adultBiphasic = 200;
+        const adultMonophasic = 360;
+        const shockPair = (cap) => `${fmt(Math.min(weight * 2, cap))} J → ${fmt(Math.min(weight * 4, cap))} J`;
+        // Forma compacta com espaços inseparáveis: cada aparelho fica inteiro em uma linha do cartão
+        const shockPairCompact = (cap) => `${fmt(Math.min(weight * 2, cap))}→${fmt(Math.min(weight * 4, cap))} J`;
+        const shockCapped = weight * 4 > adultBiphasic;
+        const cardioversionCapped = weight * 2 > adultBiphasic;
         const neonatalMaintenanceBlocked = ageMonths === undefined;
         return [
             {
                 label: "Desfibrilação",
-                value: `${fmt(firstShock)} J → ${fmt(secondShock)} J`,
+                value: shockCapped
+                    ? `Bifásico ${shockPairCompact(adultBiphasic)} · Monofásico ${shockPairCompact(adultMonophasic)}`
+                    : shockPair(adultBiphasic),
                 note: "Primeiro choque: 2 J/kg. Segundo: 4 J/kg. Subsequentes: ≥4 J/kg; máximo 10 J/kg ou dose adulta, o menor."
-                    + (shockCapped ? " Valor limitado a 200 J (dose adulta bifásica usual, 120-200 J conforme o fabricante; se desconhecida, usar a energia máxima do aparelho; monofásico: 360 J)." : ""),
+                    + (shockCapped ? " Teto pela dose adulta do aparelho: bifásico conforme o fabricante (usual 120-200 J; se desconhecida, usar a energia máxima do aparelho); monofásico 360 J." : ""),
             },
             {
                 label: "Cardioversão sincronizada",
-                value: `${fmt(Math.min(weight * 0.5, adultShock))}-${fmt(Math.min(weight, adultShock))} J`,
-                note: `Se ineficaz: ${fmt(Math.min(weight * 2, adultShock))} J`,
+                value: `${fmt(weight * 0.5)}-${fmt(weight)} J`,
+                note: cardioversionCapped
+                    ? `Se ineficaz: ${fmt(adultBiphasic)} J no bifásico (teto usual; seguir o fabricante) ou ${fmt(Math.min(weight * 2, adultMonophasic))} J no monofásico`
+                    : `Se ineficaz: ${fmt(weight * 2)} J`,
             },
             {
                 label: "Cristaloide",
