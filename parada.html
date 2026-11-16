@@ -2385,7 +2385,7 @@ footer {
             presentation: "50 mcg/mL.",
             dilution: "Para 10 mcg/mL: 2 mL (100 mcg) + 8 mL de SF → 10 mL. Rotular concentração e dose total.",
             administration: "1-2 mcg/kg IV, lentamente, antes do indutor conforme protocolo.",
-            warning: "Push rápido ou dose alta pode causar rigidez de parede torácica, apneia, bradicardia e hipotensão.",
+            warning: "Push rápido ou dose alta pode causar rigidez de parede torácica, apneia, bradicardia e hipotensão. Off label abaixo de 2 anos: a bula (DailyMed) não estabelece segurança e eficácia nessa faixa.",
             tags: ["IOT", "fentanil", "analgesia", "opioide"],
             source: { label: "SCCM PANDEM 2022", href: "https://pubmed.ncbi.nlm.nih.gov/35119438/" },
             calculate: (weight) => bolus({
@@ -2406,7 +2406,7 @@ footer {
             presentation: "Dose calculada em mg. A fotografia CMED atual localiza escetamina 50 mg/mL, não uma apresentação automaticamente intercambiável de cetamina racêmica.",
             dilution: "Conversão para mL bloqueada até conciliar princípio ativo, concentração e bula do produto disponível. Não substituir cetamina por escetamina por equivalência presumida.",
             administration: "1-2 mg/kg IV. Ajustar para baixo no choque profundo.",
-            warning: "Pode causar hipotensão em choque descompensado, além de apneia, laringoespasmo e hipersalivação.",
+            warning: "Pode causar hipotensão em choque descompensado, além de apneia, laringoespasmo e hipersalivação. Off label abaixo de 16 anos: a bula do Ketalar (DailyMed) não estabelece segurança e eficácia nessa faixa.",
             tags: ["IOT", "cetamina", "indução", "broncoespasmo"],
             source: { label: "SCCM PANDEM 2022", href: "https://pubmed.ncbi.nlm.nih.gov/35119438/" },
             calculate: (weight) => doseOnlyBolus({
@@ -2439,7 +2439,7 @@ footer {
             presentation: "10 mg/mL (1%).",
             dilution: "Não diluir; técnica asséptica rigorosa e descarte conforme fabricante.",
             administration: "1-2 mg/kg IV, titulado. Doses menores em instabilidade.",
-            warning: "Hipotensão e depressão respiratória. Não usar a recomendação do Excel de iniciar lactente com 3 mg/kg; infusão prolongada em TCE pediátrico grave não é recomendada.",
+            warning: "Hipotensão e depressão respiratória. Não usar a recomendação do Excel de iniciar lactente com 3 mg/kg; infusão prolongada em TCE pediátrico grave não é recomendada. Off label para indução abaixo de 3 anos: a bula do Diprivan (DailyMed) não recomenda.",
             tags: ["IOT", "propofol", "indução", "hipotensão"],
             source: { label: "Brain Trauma Foundation", href: "https://braintrauma.org/coma/guidelines/pediatric" },
             calculate: (weight) => bolus({ weight, points: [{ label: "Dose baixa", perKg: 1 }, { label: "Dose alta", perKg: 2 }], concentration: 10, doseUnit: "mg" }),
