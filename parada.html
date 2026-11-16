@@ -1308,7 +1308,7 @@ footer {
 
     <div id="locked-placeholder" class="empty-state" style="margin-top:12px; padding:28px 20px; border-radius:12px; border:1px dashed #a06a76; text-align:center;">
       <h2 style="margin:0 0 8px; font-size:20px;">Informe Peso e Idade e clique em "Confirmar paciente e liberar cálculos"</h2>
-      <p style="margin:0; font-size:14px;">Por segurança assistencial, o Resumo (Linha Zero), Via Aérea, Medicações (55 itens em 9 cenários) e Ventilação Mecânica são liberados imediatamente após a confirmação explícita dos dados antropométricos acima.</p>
+      <p style="margin:0; font-size:14px;">Por segurança assistencial, o Resumo (Linha Zero), Via Aérea, Medicações (56 itens em 9 cenários) e Ventilação Mecânica são liberados imediatamente após a confirmação explícita dos dados antropométricos acima.</p>
     </div>
 
     <section class="quick-section" id="resumo-calculado" aria-live="polite" style="display:none;"></section>
@@ -1320,7 +1320,7 @@ footer {
         <div>
           <div class="section-kicker">MEDICAÇÕES E INFUSÕES</div>
           <h2>Dose calculada + preparo rastreável</h2>
-          <p class="section-subcopy">55 itens clínicos em 9 cenários, com limites explícitos quando aplicáveis e fonte rastreável.</p>
+          <p class="section-subcopy">56 itens clínicos em 9 cenários, com limites explícitos quando aplicáveis e fonte rastreável.</p>
         </div>
         <label class="search-field">
           <span>Buscar</span>
@@ -2346,6 +2346,35 @@ footer {
             },
         },
         {
+            id: "cardioversao-sincronizada",
+            category: "pcr",
+            name: "Cardioversão sincronizada",
+            context: "Taquiarritmia com pulso e comprometimento cardiopulmonar",
+            indication: "Taquiarritmia com pulso e comprometimento cardiopulmonar: alteração aguda da consciência, sinais de choque ou hipotensão. Sedar se necessário, sem atrasar a cardioversão.",
+            presentation: "Desfibrilador em modo sincronizado (SYNC).",
+            dilution: "Não se aplica.",
+            administration: "Iniciar com 0,5-1 J/kg; se ineficaz, aumentar para 2 J/kg.",
+            warning: "O PALS 2025 não define energia máxima para a cardioversão sincronizada. Esta folha aplica o mesmo teto do cartão de cardioversão, pela dose adulta do aparelho: bifásico conforme o fabricante (usual 200 J); monofásico 360 J.",
+            tags: ["cardioversão", "sincronizada", "TSV", "taquicardia", "choque elétrico"],
+            source: { label: "AHA/AAP PALS 2025 — taquiarritmia com pulso", href: "https://cpr.heart.org/-/media/CPR-Files/CPR-Guidelines-Files/2025-Accessible/Algorithm-PALS-Tachyarrhythmia-LngDscrp-250729-Ed.pdf" },
+            calculate: (weight) => {
+                const biphasicCap = 200;
+                const monophasicCap = 360;
+                const rows = [{ label: "Inicial 0,5 J/kg", perKg: 0.5 }, { label: "Inicial 1 J/kg", perKg: 1 }, { label: "Se ineficaz 2 J/kg", perKg: 2 }];
+                return rows.map((row) => {
+                    const raw = weight * row.perKg;
+                    const biphasic = Math.min(raw, biphasicCap);
+                    const monophasic = Math.min(raw, monophasicCap);
+                    const capped = raw > biphasicCap;
+                    return {
+                        label: row.label,
+                        dose: capped ? `Bifásico ${fmt(biphasic)} J · Monofásico ${fmt(monophasic)} J` : `${fmt(raw)} J`,
+                        reverse: `${fmt(weight, 6)} kg × ${fmt(row.perKg, 3)} J/kg ≈ ${fmt(raw, 6)} J` + (capped ? `; após teto: bifásico ${fmt(biphasic, 3)} J, monofásico ${fmt(monophasic, 3)} J` : `; energia exibida ≈ ${fmt(raw, 3)} J (${fmt(raw / weight, 6)} J/kg)`),
+                    };
+                });
+            },
+        },
+        {
             id: "cristaloide",
             category: "pcr",
             name: "Cristaloide isotônico",
@@ -2383,7 +2412,7 @@ footer {
             context: "Atenuação da resposta simpática, paciente selecionado",
             indication: "Analgesia e atenuação da resposta à laringoscopia quando a hemodinâmica permite. Não é o agente de indução isolado.",
             presentation: "50 mcg/mL.",
-            dilution: "Para 10 mcg/mL: 2 mL (100 mcg) + 8 mL de SF → 10 mL. Rotular concentração e dose total.",
+            dilution: "Para 10 mcg/mL: 4 mL (200 mcg) + 16 mL de SF → 20 mL. Rotular concentração e dose total.",
             administration: "1-2 mcg/kg IV, lentamente, antes do indutor conforme protocolo.",
             warning: "Push rápido ou dose alta pode causar rigidez de parede torácica, apneia, bradicardia e hipotensão. Off label abaixo de 2 anos: a bula (DailyMed) não estabelece segurança e eficácia nessa faixa.",
             tags: ["IOT", "fentanil", "analgesia", "opioide"],
@@ -2517,8 +2546,8 @@ footer {
             indication: "Vasoativo de primeira linha possível no choque séptico refratário a fluidos, especialmente quando predomina baixo débito; também em hipotensão pós-PCR selecionada.",
             presentation: "Exemplo calculado: solução final 10 mcg/mL.",
             dilution: "Adicionar 1 mg e completar para 100 mL com SF 0,9% ou diluente institucional → 10 mcg/mL.",
-            administration: "0,05-1 mcg/kg/min, titular. Iniciar na faixa baixa e reavaliar lactato, perfusão, glicemia, ritmo e pressão.",
-            warning: "Não confundir com a solução de PCR 0,1 mg/mL; a bolsa da infusão deste exemplo é 10 vezes menos concentrada.",
+            administration: "0,05-1 mcg/kg/min, titular. Iniciar na faixa baixa e reavaliar lactato, perfusão, glicemia, ritmo e pressão. Acima de 0,5 mcg/kg/min, somente com UTI (QPEC Sepsis CHQ-GDL-60010).",
+            warning: "Não confundir com a solução de PCR 0,1 mg/mL; a bolsa da infusão deste exemplo é 10 vezes menos concentrada. Off label em pediatria no choque séptico: a bula da epinefrina (FDA, Adrenalin, rev. 06/2026) não estabelece segurança e eficácia nessa indicação em pacientes pediátricos.",
             tags: ["choque", "adrenalina", "epinefrina", "inotrópico"],
             source: starship,
             calculate: (weight) => infusion({ weight, points: [{ label: "Inicial", perKg: 0.05 }, { label: "Alvo intermediário", perKg: 0.1 }, { label: "Alta", perKg: 1 }], concentration: 10, doseUnit: "mcg", perMinute: true }),
@@ -2545,7 +2574,7 @@ footer {
             indication: "Inodilatador em disfunção miocárdica ou pós-operatório cardíaco selecionado, com monitorização intensiva.",
             presentation: "Exemplo calculado: solução final 200 mcg/mL.",
             dilution: "Adicionar 20 mg e completar para 100 mL → 200 mcg/mL. Adequar ao padrão institucional.",
-            administration: "0,25-0,75 mcg/kg/min. Omitir bolus na instabilidade hemodinâmica.",
+            administration: "0,25-0,75 mcg/kg/min. Omitir bolus na instabilidade hemodinâmica. Ataque pediátrico descrito no RCM do Reino Unido (milrinona 1 mg/mL, Wockhardt): 50-75 mcg/kg em 30-60 min; manutenção 0,25-0,75 mcg/kg/min.",
             warning: "Hipotensão e arritmia; ajustar na disfunção renal. Não usar vazão desta folha se a bolsa tiver 100 mcg/mL. Off label em pediatria: a bula da milrinona (DailyMed) não estabelece segurança e eficácia em pacientes pediátricos.",
             tags: ["milrinona", "inodilatador", "baixo débito"],
             level: "specialist",
@@ -2576,7 +2605,7 @@ footer {
             presentation: "Exemplo calculado: solução final 5 mcg/mL.",
             dilution: "Adicionar 500 mcg e completar para 100 mL com SF 0,9% → 5 mcg/mL. Para seringa menor, manter a mesma razão e rotular.",
             administration: "0,5-5 mcg/kg/h, titulada à resposta e ao contexto clínico.",
-            warning: "A unidade é mcg/kg/HORA. O Excel misturava minuto e hora, com potencial erro de 60x. Vigiar apneia, rigidez, íleo e tolerância.",
+            warning: "A unidade é mcg/kg/HORA. O Excel misturava minuto e hora, com potencial erro de 60x. Vigiar apneia, rigidez, íleo e tolerância. Off label: a bula da fentanila (Pfizer, rev. 6/2026) não estabelece uso abaixo de 2 anos nem define infusão contínua para sedação em UTI.",
             tags: ["fentanil", "sedação", "analgesia", "pós-IOT", "infusão"],
             source: pandem,
             calculate: (weight) => infusion({ weight, points: [{ label: "Inicial", perKg: 0.5 }, { label: "Usual", perKg: 1 }, { label: "Alta", perKg: 5 }], concentration: 5, doseUnit: "mcg" }),
@@ -2590,7 +2619,7 @@ footer {
             presentation: "Exemplo calculado: solução final 1 mg/mL.",
             dilution: "Adicionar 100 mg e completar para 100 mL com SF 0,9% → 1 mg/mL. Utilizar preparação padronizada do serviço.",
             administration: "0,01-0,05 mg/kg/h, titulada.",
-            warning: "Acúmulo de metabólitos na disfunção renal; hipotensão e liberação de histamina. Reduzir em instabilidade e associar monitorização respiratória.",
+            warning: "Acúmulo de metabólitos na disfunção renal; hipotensão e liberação de histamina. Reduzir em instabilidade e associar monitorização respiratória. Off label em pediatria: a bula da morfina injetável (Hospira, rev. 12/2025) não estabelece segurança e eficácia abaixo de 18 anos.",
             tags: ["morfina", "analgesia", "sedação", "infusão"],
             source: pandem,
             calculate: (weight) => infusion({ weight, points: [{ label: "Inicial", perKg: 0.01 }, { label: "Usual", perKg: 0.02 }, { label: "Alta", perKg: 0.05 }], concentration: 1, doseUnit: "mg" }),
@@ -2618,7 +2647,7 @@ footer {
             presentation: "Exemplo calculado: solução final 4 mcg/mL.",
             dilution: "Adicionar 400 mcg e completar para 100 mL com SF 0,9% → 4 mcg/mL.",
             administration: "0,2-1,4 mcg/kg/h. Evitar bolus de rotina; titular gradualmente.",
-            warning: "Bradicardia e hipotensão, sobretudo com bolus ou hipovolemia. O bolus rápido descrito no Excel foi removido.",
+            warning: "Bradicardia e hipotensão, sobretudo com bolus ou hipovolemia. O bolus rápido descrito no Excel foi removido. Off label: a bula do Precedex (rev. 5/2026) aprova em pediatria apenas a sedação de procedimento em não intubados (1 mês a <18 anos); sedação em UTI pediátrica não estabelecida.",
             tags: ["dexmedetomidina", "sedação", "desmame", "infusão"],
             source: pandem,
             calculate: (weight) => infusion({ weight, points: [{ label: "Inicial", perKg: 0.2 }, { label: "Usual", perKg: 0.5 }, { label: "Alta", perKg: 1.4 }], concentration: 4, doseUnit: "mcg" }),
@@ -2632,7 +2661,7 @@ footer {
             presentation: "Exemplo calculado: solução final 2 mg/mL.",
             dilution: "Adicionar 200 mg e completar para 100 mL com SF 0,9% → 2 mg/mL.",
             administration: "0,5-2 mg/kg/h, titulada.",
-            warning: "Não é hemodinamicamente neutra no choque catecolamina-depletado. Vigiar secreções, hipertensão, taquicardia e fenômenos de emergência.",
+            warning: "Não é hemodinamicamente neutra no choque catecolamina-depletado. Vigiar secreções, hipertensão, taquicardia e fenômenos de emergência. Off label abaixo de 16 anos: a bula do Ketalar (FDA, rev. 03/2026) não estabelece segurança e eficácia nessa faixa.",
             tags: ["cetamina", "sedação", "analgesia", "broncoespasmo", "infusão"],
             source: pandem,
             calculate: (weight) => infusion({ weight, points: [{ label: "Inicial", perKg: 0.5 }, { label: "Usual", perKg: 1 }, { label: "Alta", perKg: 2 }], concentration: 2, doseUnit: "mg" }),
