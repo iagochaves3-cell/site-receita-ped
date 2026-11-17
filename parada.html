@@ -1769,6 +1769,16 @@ footer {
                 stockPreparation: { amount: 4, amountUnit: "mg", finalVolume: 100, finalConcentrationLabel: "40 mcg/mL" },
                 warning: "Confirmar se o rótulo expressa norepinefrina base ou hemitartarato antes de aspirar e rotular a bolsa.",
             },
+            {
+                label: "Noradrenalina 1 mg/mL de base — solução concentrada 80 mcg/mL (somente acesso central)",
+                concentration: 1,
+                unit: "mg/mL",
+                origin: "registered_product",
+                stockPreparation: { amount: 4, amountUnit: "mg", finalVolume: 50, finalConcentrationLabel: "80 mcg/mL" },
+                infusionConcentration: 80,
+                dilution: "Adicionar 4 mg (4 mL de 1 mg/mL) e completar para 50 mL com diluente compatível → 80 mcg/mL (CREDD/CHQ, opção STRONG). Confirmar se o rótulo expressa base ou sal.",
+                warning: "Somente acesso central (CREDD/CHQ: \"Central Access\"). Vazões calculadas para 80 mcg/mL; não usar com a bolsa de 40 mcg/mL.",
+            },
         ],
         "adrenalina-infusao": [
             {
@@ -1777,6 +1787,16 @@ footer {
                 unit: "mg/mL",
                 origin: "registered_product",
                 stockPreparation: { amount: 1, amountUnit: "mg", finalVolume: 100, finalConcentrationLabel: "10 mcg/mL" },
+            },
+            {
+                label: "Adrenalina injetável 1 mg/mL — solução concentrada 120 mcg/mL (somente acesso central)",
+                concentration: 1,
+                unit: "mg/mL",
+                origin: "registered_product",
+                stockPreparation: { amount: 6, amountUnit: "mg", finalVolume: 50, finalConcentrationLabel: "120 mcg/mL" },
+                infusionConcentration: 120,
+                dilution: "Adicionar 6 mg (6 mL de 1 mg/mL) e completar para 50 mL com SF 0,9% ou SG 5% → 120 mcg/mL (CREDD/CHQ, opção STRONG).",
+                warning: "Somente acesso central (CREDD/CHQ: \"Central Access\"). Vazões calculadas para 120 mcg/mL; não usar com a bolsa de 10 mcg/mL.",
             },
         ],
         dobutamina: [
@@ -2092,6 +2112,13 @@ footer {
                 result.stockPreparationContext = `Aspirar para preparar ${fmt(selected.stockPreparation.finalVolume, 3)} mL a ${selected.stockPreparation.finalConcentrationLabel}`;
                 result.stockPreparationReverse = `${fmt(stockVolume, 6)} mL × ${fmt(selected.concentration, 3)} ${selected.unit} ≈ ${fmt(selected.stockPreparation.amount, 6)} ${selected.stockPreparation.amountUnit}; completar para ${fmt(selected.stockPreparation.finalVolume, 3)} mL = ${selected.stockPreparation.finalConcentrationLabel}`;
             }
+            if (selected.infusionConcentration && typeof line.ratePerKg === "number") {
+                const altRate = (line.ratePerKg * line.rateWeight / selected.infusionConcentration) * (line.ratePerMinute ? 60 : 1);
+                const altTime = line.ratePerMinute ? "min" : "h";
+                result.rate = `${fmt(altRate, 3)} mL/h`;
+                result.reverse = `${fmt(altRate, 6)} mL/h × ${fmt(selected.infusionConcentration, 3)} ${line.rateDoseUnit}/mL${line.ratePerMinute ? " ÷ 60" : ""} ÷ ${fmt(line.rateWeight, 6)} kg ≈ ${fmt(line.ratePerKg, 6)} ${line.rateDoseUnit}/kg/${altTime}; vazão exibida ≈ ${fmt(altRate, 3)} mL/h (solução ${fmt(selected.infusionConcentration, 3)} ${line.rateDoseUnit}/mL)`;
+                return result;
+            }
             if (!Number.isFinite(line.doseAmount) || (line.doseAmount ?? 0) < 0)
                 return result;
             const exactDose = line.doseAmount ?? 0;
@@ -2194,6 +2221,10 @@ footer {
             label: point.label,
             dose: `${fmt(point.perKg, 4)} ${doseUnit}/kg/${time}`,
             rate: `${fmt(rate, 3)} mL/h`,
+            ratePerKg: point.perKg,
+            rateWeight: weight,
+            rateDoseUnit: doseUnit,
+            ratePerMinute: Boolean(perMinute),
             reverse: `${fmt(rate, 6)} mL/h × ${fmt(concentration, 3)} ${doseUnit}/mL${perMinute ? " ÷ 60" : ""} ÷ ${fmt(weight, 6)} kg ≈ ${fmt(point.perKg, 6)} ${doseUnit}/kg/${time}; vazão exibida ≈ ${fmt(rate, 3)} mL/h`,
         };
     });
@@ -2412,9 +2443,9 @@ footer {
             context: "Atenuação da resposta simpática, paciente selecionado",
             indication: "Analgesia e atenuação da resposta à laringoscopia quando a hemodinâmica permite. Não é o agente de indução isolado.",
             presentation: "50 mcg/mL.",
-            dilution: "Para 10 mcg/mL: 4 mL (200 mcg) + 16 mL de SF → 20 mL. Rotular concentração e dose total.",
+            dilution: "Para 10 mcg/mL: 4 mL (200 mcg) + 16 mL de SF → 20 mL. Rotular concentração e dose total. Acima de 100 kg, preparar uma 2ª seringa igual.",
             administration: "1-2 mcg/kg IV, lentamente, antes do indutor conforme protocolo.",
-            warning: "Push rápido ou dose alta pode causar rigidez de parede torácica, apneia, bradicardia e hipotensão. Off label abaixo de 2 anos: a bula (DailyMed) não estabelece segurança e eficácia nessa faixa.",
+            warning: "Push rápido ou dose alta pode causar rigidez de parede torácica, apneia, bradicardia e hipotensão. Off label abaixo de 2 anos: a bula (DailyMed) não estabelece segurança e eficácia nessa faixa. A bula não define dose máxima; em obesidade, definir o peso de cálculo conforme o protocolo do serviço.",
             tags: ["IOT", "fentanil", "analgesia", "opioide"],
             source: { label: "SCCM PANDEM 2022", href: "https://pubmed.ncbi.nlm.nih.gov/35119438/" },
             calculate: (weight) => bolus({
@@ -2435,7 +2466,7 @@ footer {
             presentation: "Dose calculada em mg. A fotografia CMED atual localiza escetamina 50 mg/mL, não uma apresentação automaticamente intercambiável de cetamina racêmica.",
             dilution: "Conversão para mL bloqueada até conciliar princípio ativo, concentração e bula do produto disponível. Não substituir cetamina por escetamina por equivalência presumida.",
             administration: "1-2 mg/kg IV. Ajustar para baixo no choque profundo.",
-            warning: "Pode causar hipotensão em choque descompensado, além de apneia, laringoespasmo e hipersalivação. Off label abaixo de 16 anos: a bula do Ketalar (DailyMed) não estabelece segurança e eficácia nessa faixa.",
+            warning: "Pode causar hipotensão em choque descompensado, além de apneia, laringoespasmo e hipersalivação. Off label abaixo de 16 anos: a bula do Ketalar (DailyMed) não estabelece segurança e eficácia nessa faixa. A bula não define dose máxima; em obesidade, definir o peso de cálculo conforme o protocolo do serviço.",
             tags: ["IOT", "cetamina", "indução", "broncoespasmo"],
             source: { label: "SCCM PANDEM 2022", href: "https://pubmed.ncbi.nlm.nih.gov/35119438/" },
             calculate: (weight) => doseOnlyBolus({
@@ -2468,7 +2499,7 @@ footer {
             presentation: "10 mg/mL (1%).",
             dilution: "Não diluir; técnica asséptica rigorosa e descarte conforme fabricante.",
             administration: "1-2 mg/kg IV, titulado. Doses menores em instabilidade.",
-            warning: "Hipotensão e depressão respiratória. Não usar a recomendação do Excel de iniciar lactente com 3 mg/kg; infusão prolongada em TCE pediátrico grave não é recomendada. Off label para indução abaixo de 3 anos: a bula do Diprivan (DailyMed) não recomenda.",
+            warning: "Hipotensão e depressão respiratória. Não usar a recomendação do Excel de iniciar lactente com 3 mg/kg; infusão prolongada em TCE pediátrico grave não é recomendada. Off label para indução abaixo de 3 anos: a bula do Diprivan (DailyMed) não recomenda. A bula não define dose máxima; em obesidade, definir o peso de cálculo conforme o protocolo do serviço.",
             tags: ["IOT", "propofol", "indução", "hipotensão"],
             source: { label: "Brain Trauma Foundation", href: "https://braintrauma.org/coma/guidelines/pediatric" },
             calculate: (weight) => bolus({ weight, points: [{ label: "Dose baixa", perKg: 1 }, { label: "Dose alta", perKg: 2 }], concentration: 10, doseUnit: "mg" }),
@@ -2495,7 +2526,7 @@ footer {
             indication: "Bloqueio de início rápido quando a curta duração oferece vantagem e não há risco de hipercalemia, miopatia ou hipertermia maligna.",
             presentation: "Cloreto de suxametônio: frasco-ampola em pó de 100 mg ou 500 mg; seletor libera 20 mg/mL somente após preparo validado.",
             dilution: "Reconstituir estritamente conforme a bula do produto disponível. A conversão em mL vale apenas após confirmar e rotular a concentração final de 20 mg/mL documentada no catálogo anexado.",
-            administration: "Selecione explicitamente abaixo a faixa clínica aplicável; a folha exibirá apenas uma dose (1 ou 2 mg/kg IV). Máximo usual 150 mg.",
+            administration: "Selecione explicitamente abaixo a faixa clínica aplicável; a folha exibirá apenas uma dose (1 ou 2 mg/kg IV). Teto conservador desta folha: 150 mg; a bula define 150 mg apenas para a via IM e não define máximo IV.",
             warning: "Evitar em doença neuromuscular, denervação, queimadura/esmagamento após 24-48 h, hipercalemia ou história de hipertermia maligna. Pode causar bradicardia/asistolia pediátrica.",
             tags: ["succinilcolina", "suxametônio", "IOT", "bloqueador neuromuscular", "hipercalemia"],
             level: "specialist",
@@ -2530,10 +2561,10 @@ footer {
             name: "Noradrenalina",
             context: "Choque vasoplégico / distributivo",
             indication: "Vasoativo de primeira linha possível no choque séptico refratário a fluidos, sobretudo no fenótipo vasoplégico.",
-            presentation: "Exemplo calculado: solução final 40 mcg/mL.",
+            presentation: "Exemplo calculado: solução final 40 mcg/mL. Opção concentrada 80 mcg/mL (somente acesso central; CREDD/CHQ) no seletor de apresentação.",
             dilution: "Adicionar 4 mg e completar para 100 mL com diluente compatível → 40 mcg/mL. Confirmar se o rótulo expressa base ou sal.",
             administration: "0,05-1 mcg/kg/min, titular à perfusão e pressão-alvo. Preferir acesso central; pode iniciar perifericamente com vigilância estrita enquanto se obtém acesso definitivo.",
-            warning: "Concentrações institucionais variam. Se a bolsa não for 40 mcg/mL, descarte as vazões exibidas e recalcule. Off label em pediatria: a bula da norepinefrina (DailyMed) não estabelece segurança e eficácia em pacientes pediátricos.",
+            warning: "Concentrações institucionais variam. Se a bolsa não corresponder à apresentação selecionada (40 ou 80 mcg/mL), descarte as vazões exibidas e recalcule. Off label em pediatria: a bula da norepinefrina (DailyMed) não estabelece segurança e eficácia em pacientes pediátricos.",
             tags: ["choque", "noradrenalina", "vasopressor", "sepse"],
             source: starship,
             calculate: (weight) => infusion({ weight, points: [{ label: "Inicial", perKg: 0.05 }, { label: "Alvo intermediário", perKg: 0.1 }, { label: "Alta", perKg: 1 }], concentration: 40, doseUnit: "mcg", perMinute: true }),
@@ -2544,7 +2575,7 @@ footer {
             name: "Adrenalina — infusão",
             context: "Choque com baixo débito / disfunção miocárdica",
             indication: "Vasoativo de primeira linha possível no choque séptico refratário a fluidos, especialmente quando predomina baixo débito; também em hipotensão pós-PCR selecionada.",
-            presentation: "Exemplo calculado: solução final 10 mcg/mL.",
+            presentation: "Exemplo calculado: solução final 10 mcg/mL. Opção concentrada 120 mcg/mL (somente acesso central; CREDD/CHQ) no seletor de apresentação.",
             dilution: "Adicionar 1 mg e completar para 100 mL com SF 0,9% ou diluente institucional → 10 mcg/mL.",
             administration: "0,05-1 mcg/kg/min, titular. Iniciar na faixa baixa e reavaliar lactato, perfusão, glicemia, ritmo e pressão. Acima de 0,5 mcg/kg/min, somente com UTI (QPEC Sepsis CHQ-GDL-60010).",
             warning: "Não confundir com a solução de PCR 0,1 mg/mL; a bolsa da infusão deste exemplo é 10 vezes menos concentrada. Off label em pediatria no choque séptico: a bula da epinefrina (FDA, Adrenalin, rev. 06/2026) não estabelece segurança e eficácia nessa indicação em pacientes pediátricos.",
@@ -2701,16 +2732,17 @@ footer {
             category: "neuro",
             name: "Midazolam — crise convulsiva",
             context: "Primeira linha benzodiazepínica",
-            indication: "Crise convulsiva com duração ≥5 min ou crises seriadas sem recuperação. Escolher uma via; não somar as doses das duas linhas.",
+            indication: "Crise convulsiva com duração ≥5 min ou crises seriadas sem recuperação. Escolher uma via; não somar as doses das linhas.",
             presentation: "Midazolam injetável 5 mg/mL para IV e IN/IM; 1 mg/mL selecionável somente para a linha IV.",
             dilution: "IV: pode diluir para medida precisa. IN é uso off-label: usar 5 mg/mL, dividir o volume entre as narinas e confirmar protocolo/dispositivo do serviço.",
-            administration: "IV 0,1 mg/kg (máx. 4 mg) ou IN/IM 0,2 mg/kg (máx. 10 mg). Reavaliar respiração e glicemia imediatamente.",
+            administration: "IV 0,1 mg/kg (máx. 4 mg), IN/bucal 0,3 mg/kg (máx. 10 mg; off label) ou IM 0,2 mg/kg (máx. 10 mg), conforme CHOP. Reavaliar respiração e glicemia imediatamente.",
             warning: "Depressão respiratória é previsível, mas subtratar estado de mal também é perigoso. Preparar ventilação; limitar benzodiazepínicos antes da segunda linha.",
             tags: ["midazolam", "convulsão", "estado de mal", "intranasal", "benzodiazepínico"],
             source: chopStatus,
             calculate: (weight) => [
                 ...bolus({ weight, points: [{ label: "IV", perKg: 0.1, max: 4 }], concentration: 5, doseUnit: "mg" }),
-                ...bolus({ weight, points: [{ label: "IN ou IM", perKg: 0.2, max: 10 }], concentration: 5, doseUnit: "mg" }),
+                ...bolus({ weight, points: [{ label: "IN/bucal (off label)", perKg: 0.3, max: 10 }], concentration: 5, doseUnit: "mg" }),
+                ...bolus({ weight, points: [{ label: "IM", perKg: 0.2, max: 10 }], concentration: 5, doseUnit: "mg" }),
             ],
         },
         {
@@ -2740,7 +2772,7 @@ footer {
             indication: "Estado de mal estabelecido após benzodiazepínico adequado. Escolher uma opção de segunda linha conforme etiologia e paciente.",
             presentation: "Exemplo: 100 mg/mL (500 mg/5 mL).",
             dilution: "Diluir a dose em SF 0,9% ou SG 5% para volume compatível com administração; usar concentração/tempo institucionais.",
-            administration: "60 mg/kg IV; máximo 4.500 mg, usualmente em 10-15 min conforme protocolo.",
+            administration: "60 mg/kg IV; máximo 4.500 mg, usualmente em 10-15 min conforme protocolo. Abaixo de 2 meses: 50 mg/kg (CHOP).",
             warning: "Ajuste renal é relevante para manutenção, mas não deve atrasar a carga tempo-crítica; vigiar agitação e sonolência.",
             tags: ["levetiracetam", "convulsão", "estado de mal", "segunda linha"],
             source: chopStatus,
@@ -2773,7 +2805,7 @@ footer {
             indication: "Segunda linha no estado de mal, considerando arritmia, hipotensão e interações.",
             presentation: "50 mg/mL.",
             dilution: "Diluir somente em SF 0,9%; usar filtro e administrar logo após preparo. Incompatível com soluções glicosadas.",
-            administration: "20 mg/kg IV; máximo 1.000 mg. Não exceder 1 mg/kg/min em criança nem 50 mg/min em qualquer peso (bula: 1-3 mg/kg/min ou 50 mg/min, o que for mais lento), com ECG e pressão contínuos.",
+            administration: "20 mg/kg IV; máximo 1.000 mg (teto desta folha; a CHOP usa 1.500 mg). Não exceder 1 mg/kg/min em criança nem 50 mg/min em qualquer peso (bula: 1-3 mg/kg/min ou 50 mg/min, o que for mais lento), com ECG e pressão contínuos.",
             warning: "Extravasamento pode causar lesão grave. Não usar em determinadas intoxicações por bloqueadores de canal de sódio sem especialista.",
             tags: ["fenitoína", "convulsão", "estado de mal", "segunda linha"],
             source: chopStatus,
@@ -2807,7 +2839,7 @@ footer {
             indication: "Estado de mal, especialmente em contexto neonatal conforme protocolo e etiologia.",
             presentation: "Exemplo calculado: 100 mg/mL; apresentações variam.",
             dilution: "Diluir para administração controlada conforme protocolo e compatibilidade do produto disponível.",
-            administration: "20 mg/kg IV; máximo 1.000 mg. Administrar lentamente (até 1 mg/kg/min, sem passar de 30 mg/min — CHOP), com monitorização cardiorrespiratória.",
+            administration: "20 mg/kg IV; máximo 1.000 mg (teto desta folha; a CHOP usa 2.000 mg). Administrar lentamente (até 1 mg/kg/min, sem passar de 30 mg/min — CHOP), com monitorização cardiorrespiratória.",
             warning: "Depressão respiratória e hipotensão são aditivas aos benzodiazepínicos; preparar suporte ventilatório.",
             tags: ["fenobarbital", "convulsão", "neonato", "estado de mal"],
             source: chopStatus,
@@ -2869,7 +2901,7 @@ footer {
             indication: "Broncoespasmo; preferir aerossol dosimetrado com espaçador quando a criança coopera e a gravidade permite.",
             presentation: "100 mcg por jato, com espaçador adequado.",
             dilution: "Não se aplica. Administrar um jato por vez no espaçador, com técnica correta.",
-            administration: "4-10 jatos, repetir a cada 20 min nas primeiras 3 doses conforme gravidade e protocolo.",
+            administration: "4-10 jatos, repetir a cada 20 min nas primeiras 3 doses conforme gravidade e protocolo. CHOP (rev. mai/2026), por peso: 5-10 kg 4 jatos; >10-20 kg 6 jatos; >20 kg 8 jatos, a cada 20 min × 3 se necessário.",
             warning: "Reavaliar trabalho respiratório, entrada de ar, fala, consciência e saturação — sibilância reduzida pode significar pior fluxo, não melhora.",
             tags: ["salbutamol", "asma", "aerossol", "broncoespasmo", "espaçador"],
             source: chopAsthma,
@@ -2885,11 +2917,17 @@ footer {
             indication: "Exacerbação com necessidade de nebulização, oxigênio ou quando a técnica com espaçador é inviável.",
             presentation: "Exemplo calculado: solução 5 mg/mL; confirmar frasco.",
             dilution: "Aspirar o volume calculado e completar com SF 0,9% para o volume operacional do nebulizador.",
-            administration: "0,15 mg/kg por dose; mínimo 2,5 mg, máximo 5 mg. Repetir a cada 20 min nas primeiras 3 doses conforme resposta.",
+            administration: "CHOP (rev. mai/2026), dose fixa por faixa de peso: 5-10 kg 2,5 mg; >10-20 kg 3,75 mg; >20 kg 5 mg (solução 5 mg/mL: 0,5; 0,75; 1 mL). Repetir a cada 20 min nas primeiras 3 doses conforme resposta. A CHOP não define faixa abaixo de 5 kg.",
             warning: "Monitorizar taquicardia, tremor, hipocalemia e lactato. Não interpretar hiperlactatemia por beta-agonista automaticamente como piora do choque.",
             tags: ["salbutamol", "asma", "nebulização", "broncoespasmo"],
             source: chopAsthma,
-            calculate: (weight) => bolus({ weight, points: [{ label: "Dose", perKg: 0.15, min: 2.5, max: 5 }], concentration: 5, doseUnit: "mg" }),
+            calculate: (weight) => {
+                if (weight < 5)
+                    return [{ label: "Abaixo de 5 kg", dose: "Sem faixa na fonte", reverse: "A CHOP define doses a partir de 5 kg; dose não calculada — definir com especialista ou protocolo do serviço." }];
+                const dose = weight <= 10 ? 2.5 : weight <= 20 ? 3.75 : 5;
+                const volume = dose / 5;
+                return [{ label: weight <= 10 ? "Dose 5-10 kg" : weight <= 20 ? "Dose >10-20 kg" : "Dose >20 kg", dose: `${fmt(dose)} mg`, doseAmount: dose, volume: `${fmt(volume)} mL`, reverse: `${fmt(dose, 6)} mg ÷ 5 mg/mL ≈ ${fmt(volume, 6)} mL; volume exibido ≈ ${fmt(volume, 3)} mL (faixa CHOP para ${fmt(weight)} kg)` }];
+            },
         },
         {
             id: "salbutamol-continuo",
@@ -2949,11 +2987,11 @@ footer {
             indication: "Crupe de qualquer gravidade. Via oral é preferível quando possível; IV/IM se necessário.",
             presentation: "Exemplo calculado: 4 mg/mL; confirmar solução disponível.",
             dilution: "Não diluir para uso oral/IM; para IV, administrar conforme fabricante e protocolo.",
-            administration: "0,6 mg/kg em dose única; máximo 10 mg.",
+            administration: "0,6 mg/kg em dose única (a CPS não define dose máxima).",
             warning: "Não esperar resposta imediata em obstrução grave; associar adrenalina nebulizada e manejo de via aérea quando indicado.",
             tags: ["dexametasona", "crupe", "laringite", "estridor"],
             source: { label: "Canadian Paediatric Society", href: "https://cps.ca/documents/position/acute-management-of-croup" },
-            calculate: (weight) => bolus({ weight, points: [{ label: "Dose única", perKg: 0.6, max: 10 }], concentration: 4, doseUnit: "mg" }),
+            calculate: (weight) => bolus({ weight, points: [{ label: "Dose única", perKg: 0.6 }], concentration: 4, doseUnit: "mg" }),
         },
         {
             id: "adrenalina-nebulizada-crupe",
@@ -2963,8 +3001,8 @@ footer {
             indication: "Crupe moderado/grave com estridor em repouso ou deterioração, enquanto se prepara observação e via aérea de resgate.",
             presentation: "Adrenalina 1 mg/mL (1:1.000).",
             dilution: "Usar o volume calculado no nebulizador; completar com SF apenas se o dispositivo exigir volume operacional maior.",
-            administration: "0,5 mL/kg da solução 1 mg/mL; máximo 5 mL, por nebulização.",
-            warning: "Efeito é transitório. Observar recorrência por pelo menos 2-3 h e não agitar a criança; preparar equipe experiente se exaustão.",
+            administration: "0,5 mL/kg da solução 1 mg/mL; máximo 5 mL, por nebulização. A CPS (atualizada em 06/03/2026) usa 5 mL para qualquer idade e peso.",
+            warning: "Efeito é transitório. Observar recorrência por 2 a 4 h (CPS) e não agitar a criança; preparar equipe experiente se exaustão.",
             tags: ["adrenalina", "crupe", "estridor", "nebulização"],
             source: { label: "Canadian Paediatric Society", href: "https://cps.ca/documents/position/acute-management-of-croup" },
             calculate: (weight) => {
@@ -3213,6 +3251,8 @@ footer {
         const shockPairCompact = (cap) => `${fmt(Math.min(weight * 2, cap))}→${fmt(Math.min(weight * 4, cap))} J`;
         const shockCapped = weight * 4 > adultBiphasic;
         const cardioversionCapped = weight * 2 > adultBiphasic;
+        const cardioversionInitialCapped = weight > adultBiphasic;
+        const cardioversionInitialRange = (cap) => `${fmt(Math.min(weight * 0.5, cap))}-${fmt(Math.min(weight, cap))} J`;
         const neonatalMaintenanceBlocked = ageMonths === undefined;
         return [
             {
@@ -3225,7 +3265,9 @@ footer {
             },
             {
                 label: "Cardioversão sincronizada",
-                value: `${fmt(weight * 0.5)}-${fmt(weight)} J`,
+                value: cardioversionInitialCapped
+                    ? `Bifásico ${cardioversionInitialRange(adultBiphasic)} · Monofásico ${cardioversionInitialRange(adultMonophasic)}`
+                    : `${fmt(weight * 0.5)}-${fmt(weight)} J`,
                 note: cardioversionCapped
                     ? `Se ineficaz: ${fmt(adultBiphasic)} J no bifásico (teto usual; seguir o fabricante) ou ${fmt(Math.min(weight * 2, adultMonophasic))} J no monofásico`
                     : `Se ineficaz: ${fmt(weight * 2)} J`,
