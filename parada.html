@@ -2899,14 +2899,14 @@ footer {
             indication: "Obstrução grave com resposta insuficiente a doses intermitentes, em ambiente monitorizado e com escalonamento simultâneo.",
             presentation: "Dose horária por faixa de peso; a vazão depende do sistema de nebulização e da concentração preparada.",
             dilution: "Preparar com farmácia/fisioterapia conforme nebulizador e fluxo do serviço. Rotular mg total, volume final e mg/mL.",
-            administration: "CHOP: <10 kg 7,5 mg/h; 10-20 kg 11,25 mg/h; >20 kg 15 mg/h.",
+            administration: "CHOP: até 10 kg 7,5 mg/h; >10-20 kg 11,25 mg/h; >20 kg 15 mg/h (a CHOP não define faixa abaixo de 5 kg).",
             warning: "Não converter mg/h em mL/h sem conhecer a concentração final e o dispositivo. Monitorizar potássio, glicemia, lactato e ritmo.",
             tags: ["salbutamol", "asma grave", "contínuo", "nebulização"],
             level: "specialist",
             source: chopAsthma,
             calculate: (weight) => {
-                const dose = weight < 10 ? 7.5 : weight <= 20 ? 11.25 : 15;
-                return [{ label: "Dose horária", dose: `${fmt(dose)} mg/h`, reverse: `Faixa CHOP para ${fmt(weight)} kg: ${weight < 10 ? "<10 kg" : weight <= 20 ? "10-20 kg" : ">20 kg"}` }];
+                const dose = weight <= 10 ? 7.5 : weight <= 20 ? 11.25 : 15;
+                return [{ label: "Dose horária", dose: `${fmt(dose)} mg/h`, reverse: `Faixa CHOP para ${fmt(weight)} kg: ${weight <= 10 ? "até 10 kg" : weight <= 20 ? ">10-20 kg" : ">20 kg"}` }];
             },
         },
         {
