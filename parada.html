@@ -2080,12 +2080,12 @@ footer {
             { label: "Vancomicina FA 1.000 mg", strength: 1000, strengthUnit: "mg", containerLabel: "frasco-ampola", origin: "registered_product" },
         ],
     };
-    const calculateForPresentation = (item, weight, selectedIndex = 0, selectedDoseVariant) => {
+    const calculateForPresentation = (item, weight, selectedIndex = 0, selectedDoseVariant, ageMonths) => {
         const lines = item.doseVariants
             ? typeof selectedDoseVariant === "number" && item.doseVariants[selectedDoseVariant]
-                ? item.doseVariants[selectedDoseVariant].calculate(weight)
+                ? item.doseVariants[selectedDoseVariant].calculate(weight, ageMonths)
                 : []
-            : item.calculate(weight);
+            : item.calculate(weight, ageMonths);
         const options = presentationOptions[item.id];
         if (!options)
             return lines;
@@ -2578,7 +2578,7 @@ footer {
             presentation: "Exemplo calculado: solução final 10 mcg/mL. Opção concentrada 120 mcg/mL (somente acesso central; CREDD/CHQ) no seletor de apresentação.",
             dilution: "Adicionar 1 mg e completar para 100 mL com SF 0,9% ou diluente institucional → 10 mcg/mL.",
             administration: "0,05-1 mcg/kg/min, titular. Iniciar na faixa baixa e reavaliar lactato, perfusão, glicemia, ritmo e pressão. Acima de 0,5 mcg/kg/min, somente com UTI (QPEC Sepsis CHQ-GDL-60010).",
-            warning: "Não confundir com a solução de PCR 0,1 mg/mL; a bolsa da infusão deste exemplo é 10 vezes menos concentrada. Off label em pediatria no choque séptico: a bula da epinefrina (FDA, Adrenalin, rev. 06/2026) não estabelece segurança e eficácia nessa indicação em pacientes pediátricos.",
+            warning: "Não confundir com a solução de PCR 0,1 mg/mL (100 mcg/mL): a bolsa-padrão desta folha (10 mcg/mL) é 10 vezes menos concentrada que ela; a opção concentrada (120 mcg/mL) é 1,2 vez mais concentrada que a solução de PCR. Off label em pediatria no choque séptico: a bula da epinefrina (FDA, Adrenalin, rev. 06/2026) não estabelece segurança e eficácia nessa indicação em pacientes pediátricos.",
             tags: ["choque", "adrenalina", "epinefrina", "inotrópico"],
             source: starship,
             calculate: (weight) => infusion({ weight, points: [{ label: "Inicial", perKg: 0.05 }, { label: "Alvo intermediário", perKg: 0.1 }, { label: "Alta", perKg: 1 }], concentration: 10, doseUnit: "mcg", perMinute: true }),
@@ -2772,11 +2772,11 @@ footer {
             indication: "Estado de mal estabelecido após benzodiazepínico adequado. Escolher uma opção de segunda linha conforme etiologia e paciente.",
             presentation: "Exemplo: 100 mg/mL (500 mg/5 mL).",
             dilution: "Diluir a dose em SF 0,9% ou SG 5% para volume compatível com administração; usar concentração/tempo institucionais.",
-            administration: "60 mg/kg IV; máximo 4.500 mg, usualmente em 10-15 min conforme protocolo. Abaixo de 2 meses: 50 mg/kg (CHOP).",
+            administration: "60 mg/kg IV; máximo 4.500 mg, usualmente em 10-15 min conforme protocolo. Abaixo de 2 meses: 50 mg/kg (CHOP), aplicado no cálculo pela idade confirmada.",
             warning: "Ajuste renal é relevante para manutenção, mas não deve atrasar a carga tempo-crítica; vigiar agitação e sonolência.",
             tags: ["levetiracetam", "convulsão", "estado de mal", "segunda linha"],
             source: chopStatus,
-            calculate: (weight) => bolus({ weight, points: [{ label: "Ataque", perKg: 60, max: 4500 }], concentration: 100, doseUnit: "mg" }),
+            calculate: (weight, ageMonths) => bolus({ weight, points: [typeof ageMonths === "number" && ageMonths < 2 ? { label: "Ataque (< 2 meses)", perKg: 50, max: 4500 } : { label: "Ataque", perKg: 60, max: 4500 }], concentration: 100, doseUnit: "mg" }),
         },
         {
             id: "fosfenitoina",
@@ -3449,6 +3449,11 @@ footer {
         const match = value?.match(/^([\d]+(?:[.,][\d]+)?)/);
         return match ? Number(match[1].replace(",", ".")) : Number.NaN;
     };
+    // Volume de preparo, volume e vazão são conferidos separadamente: um valor operável não esconde outro abaixo de 0,1.
+    const lineBelowOperationalResolution = (line) => [line.stockPreparationVolume, line.volume, line.rate].some((value) => {
+        const amount = leadingPtNumber(value);
+        return amount > 0 && amount < 0.1;
+    });
     function escapeHtml(value) {
         return String(value ?? "")
             .replace(/&/g, "&amp;")
@@ -3758,7 +3763,7 @@ footer {
                 && !ceftriaxoneRiskCleared;
             const neonatalMedicationBlocked = ageMonths !== undefined && ageMonths < 1;
             const ageBlocked = missingRequiredAge || belowMinimumAge || ceftriaxoneSafetyBlocked || neonatalMedicationBlocked;
-            const lines = calculateForPresentation(item, weight, selectedPresentation, selectedDoseVariant);
+            const lines = calculateForPresentation(item, weight, selectedPresentation, selectedDoseVariant, ageMonths);
             let doseVariantHtml = "";
             if (item.doseVariants) {
                 doseVariantHtml =
@@ -3795,8 +3800,7 @@ footer {
             }
             else {
                 calcBodyHtml = lines.map((line, lineIndex) => {
-                    const operationalValue = leadingPtNumber(line.stockPreparationVolume ?? line.volume ?? line.rate);
-                    const belowOperationalResolution = operationalValue > 0 && operationalValue < 0.1;
+                    const belowOperationalResolution = lineBelowOperationalResolution(line);
                     const resolutionWarningId = "resolution-warning-" + item.id + "-" + lineIndex;
                     return ('<div class="calculation-line">' +
                         '<span>' + escapeHtml(line.label) + '</span>' +
@@ -3983,11 +3987,8 @@ footer {
                 const item = clinicalItems.find((i) => i.id === itemId);
                 const option = presentationOptions[itemId]?.[idx];
                 if (item && option) {
-                    const recalculated = calculateForPresentation(item, weight, idx, selectedDoseVariants[itemId]);
-                    const belowResolution = recalculated.some((line) => {
-                        const operational = leadingPtNumber(line.stockPreparationVolume ?? line.volume ?? line.rate);
-                        return operational > 0 && operational < 0.1;
-                    });
+                    const recalculated = calculateForPresentation(item, weight, idx, selectedDoseVariants[itemId], ageMonths);
+                    const belowResolution = recalculated.some(lineBelowOperationalResolution);
                     setAnnouncement("Apresentação de " + item.name + " alterada para " + option.label + ". Cálculo atualizado." + (belowResolution ? " Atenção: o volume ou a vazão ficou abaixo de 0,1 mL e exige preparo diluído validado." : ""));
                 }
                 renderMedicationsSection(weight, ageMonths, ceftriaxoneRiskCleared);
@@ -4001,11 +4002,8 @@ footer {
                 const item = clinicalItems.find((i) => i.id === itemId);
                 const variant = item?.doseVariants?.[idx];
                 if (item && variant) {
-                    const recalculated = calculateForPresentation(item, weight, selectedPresentations[itemId] ?? 0, idx);
-                    const belowResolution = recalculated.some((line) => {
-                        const operational = leadingPtNumber(line.stockPreparationVolume ?? line.volume ?? line.rate);
-                        return operational > 0 && operational < 0.1;
-                    });
+                    const recalculated = calculateForPresentation(item, weight, selectedPresentations[itemId] ?? 0, idx, ageMonths);
+                    const belowResolution = recalculated.some(lineBelowOperationalResolution);
                     setAnnouncement("Faixa de " + item.name + " alterada para " + variant.label + ". Cálculo atualizado." + (belowResolution ? " Atenção: o volume ou a vazão ficou abaixo de 0,1 mL e exige preparo diluído validado." : ""));
                 }
                 renderMedicationsSection(weight, ageMonths, ceftriaxoneRiskCleared);
