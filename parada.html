@@ -2563,10 +2563,10 @@ footer {
             indication: "Vasoativo de primeira linha possível no choque séptico refratário a fluidos, sobretudo no fenótipo vasoplégico.",
             presentation: "Exemplo calculado: solução final 40 mcg/mL. Opção concentrada 80 mcg/mL (somente acesso central; CREDD/CHQ) no seletor de apresentação.",
             dilution: "Adicionar 4 mg e completar para 100 mL com diluente compatível → 40 mcg/mL. Confirmar se o rótulo expressa base ou sal.",
-            administration: "0,05-1 mcg/kg/min, titular à perfusão e pressão-alvo. Preferir acesso central; pode iniciar perifericamente com vigilância estrita enquanto se obtém acesso definitivo.",
+            administration: "0,05-1 mcg/kg/min, titular à perfusão e pressão-alvo (a CREDD usa até 0,8 mcg/kg/min; a QPEC Sepsis inicia em 0,1 mcg/kg/min). Preferir acesso central; pode iniciar perifericamente com vigilância estrita enquanto se obtém acesso definitivo.",
             warning: "Concentrações institucionais variam. Se a bolsa não corresponder à apresentação selecionada (40 ou 80 mcg/mL), descarte as vazões exibidas e recalcule. Off label em pediatria: a bula da norepinefrina (DailyMed) não estabelece segurança e eficácia em pacientes pediátricos.",
             tags: ["choque", "noradrenalina", "vasopressor", "sepse"],
-            source: starship,
+            source: { label: "Children's Health Queensland — QPEC Sepsis (CHQ-GDL-60010 v4.0) e CREDD", href: "https://www.childrens.health.qld.gov.au/__data/assets/pdf_file/0022/170095/sepsis-recognition-ed-management.pdf" },
             calculate: (weight) => infusion({ weight, points: [{ label: "Inicial", perKg: 0.05 }, { label: "Alvo intermediário", perKg: 0.1 }, { label: "Alta", perKg: 1 }], concentration: 40, doseUnit: "mcg", perMinute: true }),
         },
         {
@@ -2577,10 +2577,10 @@ footer {
             indication: "Vasoativo de primeira linha possível no choque séptico refratário a fluidos, especialmente quando predomina baixo débito; também em hipotensão pós-PCR selecionada.",
             presentation: "Exemplo calculado: solução final 10 mcg/mL. Opção concentrada 120 mcg/mL (somente acesso central; CREDD/CHQ) no seletor de apresentação.",
             dilution: "Adicionar 1 mg e completar para 100 mL com SF 0,9% ou diluente institucional → 10 mcg/mL.",
-            administration: "0,05-1 mcg/kg/min, titular. Iniciar na faixa baixa e reavaliar lactato, perfusão, glicemia, ritmo e pressão. Acima de 0,5 mcg/kg/min, somente com UTI (QPEC Sepsis CHQ-GDL-60010).",
+            administration: "0,05-1 mcg/kg/min, titular (a CREDD usa até 0,8 mcg/kg/min). Iniciar na faixa baixa e reavaliar lactato, perfusão, glicemia, ritmo e pressão. Acima de 0,5 mcg/kg/min, somente com UTI (QPEC Sepsis CHQ-GDL-60010).",
             warning: "Não confundir com a solução de PCR 0,1 mg/mL (100 mcg/mL): a bolsa-padrão desta folha (10 mcg/mL) é 10 vezes menos concentrada que ela; a opção concentrada (120 mcg/mL) é 1,2 vez mais concentrada que a solução de PCR. Off label em pediatria no choque séptico: a bula da epinefrina (FDA, Adrenalin, rev. 06/2026) não estabelece segurança e eficácia nessa indicação em pacientes pediátricos.",
             tags: ["choque", "adrenalina", "epinefrina", "inotrópico"],
-            source: starship,
+            source: { label: "Children's Health Queensland — QPEC Sepsis (CHQ-GDL-60010 v4.0) e CREDD", href: "https://www.childrens.health.qld.gov.au/__data/assets/pdf_file/0022/170095/sepsis-recognition-ed-management.pdf" },
             calculate: (weight) => infusion({ weight, points: [{ label: "Inicial", perKg: 0.05 }, { label: "Alvo intermediário", perKg: 0.1 }, { label: "Alta", perKg: 1 }], concentration: 10, doseUnit: "mcg", perMinute: true }),
         },
         {
@@ -2594,7 +2594,7 @@ footer {
             administration: "2-20 mcg/kg/min, titulada.",
             warning: "Pode piorar hipotensão e causar taquiarritmia. Em choque vasoplégico, frequentemente exige vasopressor associado. Off label em pediatria: a bula da dobutamina (DailyMed) informa que segurança e eficácia em pacientes pediátricos não foram estudadas.",
             tags: ["dobutamina", "baixo débito", "inotrópico"],
-            source: starship,
+            source: { label: "Children's Health Queensland — CREDD", href: "https://www.childrens.health.qld.gov.au/__data/assets/pdf_file/0030/180786/childrens-resuscitation-emergency-drug-dosage-26kg.pdf" },
             calculate: (weight) => infusion({ weight, points: [{ label: "Inicial", perKg: 2 }, { label: "Usual", perKg: 5 }, { label: "Alta", perKg: 20 }], concentration: 2500, doseUnit: "mcg", perMinute: true }),
         },
         {
@@ -2958,7 +2958,7 @@ footer {
             administration: "<20 kg: 250 mcg (1 mL); ≥20 kg: 500 mcg (2 mL), a cada 20 min por 3 doses.",
             warning: "Evitar contato do aerossol com os olhos — cuidado em glaucoma. Benefício é maior na fase inicial grave.",
             tags: ["ipratrópio", "asma", "anticolinérgico", "nebulização"],
-            source: chopAsthma,
+            source: { label: "Protocolo do serviço (sem fonte externa); comparar com CHOP Asthma Pathway", href: "https://www.chop.edu/clinical-pathway/asthma-emergent-care-clinical-pathway" },
             calculate: (weight) => {
                 const dose = weight < 20 ? 250 : 500;
                 const volume = dose / 250;
@@ -3021,7 +3021,7 @@ footer {
             administration: "2 mL/kg IV (0,2 g/kg) como abordagem inicial; reavaliar glicemia em 10-15 min e tratar recorrência.",
             warning: "Evitar SG 50% periférica na criança. O Excel propunha concentrações muito hipertônicas; esta versão prioriza SG 10%.",
             tags: ["glicose", "hipoglicemia", "SG10", "dextrose"],
-            source: qpecHypoglycaemia,
+            source: { label: "Children's Health Queensland — CREDD", href: "https://www.childrens.health.qld.gov.au/__data/assets/pdf_file/0030/180786/childrens-resuscitation-emergency-drug-dosage-26kg.pdf" },
             calculate: (weight) => {
                 const volume = weight * 2;
                 return [{ label: "Bolus inicial", dose: `${fmt(weight * 0.2)} g`, doseAmount: weight * 0.2, volume: `${fmt(volume)} mL`, reverse: `${fmt(weight * 0.2, 6)} g ÷ 0,1 g/mL ≈ ${fmt(volume, 6)} mL; volume exibido ≈ ${fmt(volume, 3)} mL (0,2 g/kg)` }];
@@ -3071,11 +3071,11 @@ footer {
             indication: "Reversão de depressão respiratória por opioide, sem atrasar ventilação com bolsa-válvula-máscara e suporte de via aérea.",
             presentation: "Exemplo calculado: 0,4 mg/mL; apresentações variam.",
             dilution: "Para titulação fina em dependência de opioide, diluir conforme protocolo e usar doses menores incrementais.",
-            administration: "Criança sem dependência conhecida: 0,1 mg/kg IV/IM/IN; máximo 2 mg por dose, repetir conforme resposta.",
+            administration: "Bula: dose inicial 0,01 mg/kg IV (IM ou SC se não houver acesso IV); sem resposta clínica, dose subsequente de 0,1 mg/kg. A CREDD usa 10 mcg/kg (0,01 mg/kg) a cada 2-3 min. A bula não define máximo pediátrico; esta folha limita cada dose a 2 mg, a maior dose inicial do adulto na mesma bula.",
             warning: "Em dependência crônica, iniciar 0,001-0,01 mg/kg e titular à ventilação para reduzir abstinência, dor e descarga simpática.",
             tags: ["naloxona", "opioide", "intoxicação", "depressão respiratória"],
-            source: { label: "DailyMed — naloxone", href: "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=b598c237-032d-4bb5-0e92-50eabd863dac" },
-            calculate: (weight) => bolus({ weight, points: [{ label: "Sem dependência conhecida", perKg: 0.1, max: 2 }], concentration: 0.4, doseUnit: "mg" }),
+            source: { label: "DailyMed — naloxone (Hospira, rev. 03/2023) e CREDD", href: "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=b598c237-032d-4bb5-0e92-50eabd863dac" },
+            calculate: (weight) => bolus({ weight, points: [{ label: "Inicial (bula; CREDD)", perKg: 0.01, max: 2 }, { label: "Sem resposta (bula)", perKg: 0.1, max: 2 }], concentration: 0.4, doseUnit: "mg" }),
         },
         {
             id: "emulsao-lipidica",
@@ -3275,7 +3275,7 @@ footer {
             {
                 label: "Cristaloide",
                 value: `${fmt(weight * 10)}-${fmt(weight * 20)} mL`,
-                note: "Reavaliar após cada alíquota",
+                note: "Reavaliar após cada alíquota. O PALS 2025 não define volume máximo por alíquota; em adolescentes de peso elevado, considerar o peso ideal e o volume usual do adulto do serviço",
             },
             {
                 label: "Manutenção basal",
