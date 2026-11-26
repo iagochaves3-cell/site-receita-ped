@@ -83,7 +83,7 @@ dialog::backdrop{background:#000b;backdrop-filter:blur(3px)}.dialog-head{display
 <header class="site-header"><div class="header-inner">
 <a href="#calcular" class="brand" id="brand"><span class="brand-mark">+</span><span>Receita PED<small>Prescrição pediátrica</small></span></a>
 <nav aria-label="Navegação principal">
-<button class="active" data-tab="calculator">Calcular</button><button data-tab="parada">PARADA</button><button data-tab="protocol">Protocolos</button>
+<button class="active" data-tab="calculator">Calcular</button><button data-tab="parada">PARADA</button><button type="button" id="summary-shortcut" aria-label="Resumo imediato da Folha de Parada" title="Resumo imediato · Linha Zero">Resumo</button><button data-tab="protocol">Protocolos</button>
 <button data-tab="medicine">Medicações</button><button data-tab="sources">Fontes</button><button data-tab="audit">Conferir</button>
 </nav></div></header>
 <main id="main">
@@ -911,6 +911,34 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()
  if(b.id==='enter-site')$('weight').focus({preventScroll:true});
 }));
 $('brand').addEventListener('click',e=>{e.preventDefault();openTab('calculator');});
+
+// Direct access to the existing PARADA summary; never bypass patient confirmation.
+let summaryObserver;
+function openParadaSummary(){
+ openTab('parada');
+ summaryObserver?.disconnect();
+ const frame=$('parada-frame');
+ const locate=()=>{
+  if(state.active!=='parada')return;
+  const doc=frame.contentDocument;
+  const summary=doc?.getElementById('resumo-calculado');
+  if(!summary)return;
+  const reveal=()=>{
+   if(state.active!=='parada'){summaryObserver?.disconnect();return true;}
+   if(summary.style.display==='none'||!summary.getClientRects().length)return false;
+   summary.scrollIntoView({block:'start'});summaryObserver?.disconnect();return true;
+  };
+  if(reveal())return;
+  doc.getElementById('dados-paciente')?.scrollIntoView({block:'start'});
+  doc.getElementById('weight-input')?.focus({preventScroll:true});
+  summaryObserver=new MutationObserver(reveal);
+  summaryObserver.observe(summary,{attributes:true,attributeFilter:['style'],childList:true});
+ };
+ if(frame.contentDocument?.getElementById('resumo-calculado'))locate();
+ else frame.addEventListener('load',locate,{once:true});
+}
+$('summary-shortcut').addEventListener('click',openParadaSummary);
+
 $('diagnosis-search').addEventListener('input',renderDxOptions);
 $('diagnosis').addEventListener('change',()=>changeDiagnosis($('diagnosis').value));
 $('weight').addEventListener('input',updatePatient);$('age').addEventListener('input',updatePatient);
